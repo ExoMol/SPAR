@@ -110,7 +110,7 @@ def readBasicFunctions(basicFunctionInputFile: str) -> dict:
     else:
         for i in range(numberOfModes):
             modeFunctionList = {} # New list of functions for mode
-            modeFunctionList[0] = basicFunction("0 1 r 1 1") # Function 0 is always 1!
+            modeFunctionList[0] = basicFunction("0 1 r 0 1") # Function 0 is always 1!
             numberOfLinesForMode: int = int(basicFunctionInputLines[modeHeaderIndex].split()[-1])
             lineBeingRead: int = 1
             while lineBeingRead <= numberOfLinesForMode:
@@ -144,9 +144,9 @@ class kineticMapping:
         self.numberOfModes = len(kineticVibrationalInput[0].split()) - self.massesIncluded - 5
         
         # Parse Vibrational input
-        self.kineticComponentIndices["gvib"] = np.zeros((len(kineticVibrationalInput), 2))
+        self.kineticComponentIndices["gvib"] = np.zeros((len(kineticVibrationalInput), 2), dtype=int)
         self.kineticCoefficients["gvib"] = np.zeros(len(kineticVibrationalInput))
-        self.kineticBasicFunctionIndices["gvib"] = np.zeros((len(kineticVibrationalInput), self.numberOfModes + self.massesIncluded))
+        self.kineticBasicFunctionIndices["gvib"] = np.zeros((len(kineticVibrationalInput), self.numberOfModes + self.massesIncluded), dtype=int)
 
         for i in range(len(kineticVibrationalInput)):
             componentLineSplit = kineticVibrationalInput[i].split()
@@ -156,9 +156,9 @@ class kineticMapping:
                 self.kineticBasicFunctionIndices["gvib"][i, j] = int(componentLineSplit[5 + j])
 
         # Parse Rotational input
-        self.kineticComponentIndices["grot"] = np.zeros((len(kineticRotationalInput), 2))
+        self.kineticComponentIndices["grot"] = np.zeros((len(kineticRotationalInput), 2), dtype=int)
         self.kineticCoefficients["grot"] = np.zeros(len(kineticRotationalInput))
-        self.kineticBasicFunctionIndices["grot"] = np.zeros((len(kineticRotationalInput), self.numberOfModes + self.massesIncluded))
+        self.kineticBasicFunctionIndices["grot"] = np.zeros((len(kineticRotationalInput), self.numberOfModes + self.massesIncluded), dtype=int)
 
         for i in range(len(kineticRotationalInput)):
             componentLineSplit = kineticRotationalInput[i].split()
@@ -168,9 +168,9 @@ class kineticMapping:
                 self.kineticBasicFunctionIndices["grot"][i, j] = int(componentLineSplit[5 + j])
 
         # Parse Coriolis input
-        self.kineticComponentIndices["gcor"] = np.zeros((len(kineticCoriolisInput), 2))
+        self.kineticComponentIndices["gcor"] = np.zeros((len(kineticCoriolisInput), 2), dtype=int)
         self.kineticCoefficients["gcor"] = np.zeros(len(kineticCoriolisInput))
-        self.kineticBasicFunctionIndices["gcor"] = np.zeros((len(kineticCoriolisInput), self.numberOfModes + self.massesIncluded))
+        self.kineticBasicFunctionIndices["gcor"] = np.zeros((len(kineticCoriolisInput), self.numberOfModes + self.massesIncluded), dtype=int)
 
         for i in range(len(kineticCoriolisInput)):
             componentLineSplit = kineticCoriolisInput[i].split()
@@ -180,9 +180,9 @@ class kineticMapping:
                 self.kineticBasicFunctionIndices["gcor"][i, j] = int(componentLineSplit[5 + j])
 
         # Parse pseudopotential input
-        self.kineticComponentIndices["pseudo"] = np.zeros((len(kineticPseudopotentialInput), 2))
+        self.kineticComponentIndices["pseudo"] = np.zeros((len(kineticPseudopotentialInput), 2), dtype=int)
         self.kineticCoefficients["pseudo"] = np.zeros(len(kineticPseudopotentialInput))
-        self.kineticBasicFunctionIndices["pseudo"] = np.zeros((len(kineticPseudopotentialInput), self.numberOfModes + self.massesIncluded))
+        self.kineticBasicFunctionIndices["pseudo"] = np.zeros((len(kineticPseudopotentialInput), self.numberOfModes + self.massesIncluded), dtype=int)
 
         for i in range(len(kineticPseudopotentialInput)):
             componentLineSplit = kineticPseudopotentialInput[i].split()
@@ -204,14 +204,17 @@ class kineticMapping:
         if kineticComponentLabel == "pseudo":
             for i in range(numberOfComponentCoefficients):
                 if self.massesIncluded:
-                    kineticComponent = self.kineticCoefficients[kineticComponentLabel][i]/masses[self.kineticBasicFunctionIndices[kineticComponentLabel][i, 0]]
+                    newTerm = self.kineticCoefficients[kineticComponentLabel][i]/masses[self.kineticBasicFunctionIndices[kineticComponentLabel][i, 0] - 1]
                 for j in range(self.numberOfModes):
-                    kineticComponent *= basicFunctions[j][self.kineticBasicFunctionIndices[kineticComponentLabel][i, j + 1]].evaluate(internalCoordinates[j])
-        else:
+                    newTerm *= basicFunctions[j + 1][self.kineticBasicFunctionIndices[kineticComponentLabel][i, j + self.massesIncluded]].evaluate(internalCoordinates[j])
+                kineticComponent += newTerm 
+        else:   
             for i in range(numberOfComponentCoefficients):
+                newTerm = self.kineticCoefficients[kineticComponentLabel][i]
                 if self.massesIncluded:
-                    kineticComponent[self.kineticComponentIndices[kineticComponentLabel][i, 0], self.kineticComponentIndices[kineticComponentLabel][i, 1]] = self.kineticCoefficients[kineticComponentLabel][i]/masses[self.kineticBasicFunctionIndices[kineticComponentLabel][i, 0]]
+                    newTerm /= masses[self.kineticBasicFunctionIndices[kineticComponentLabel][i, 0] - 1]
                 for j in range(self.numberOfModes):
-                    kineticComponent[self.kineticComponentIndices[kineticComponentLabel][i, 0], self.kineticComponentIndices[kineticComponentLabel][i, 1]] *= basicFunctions[j][self.kineticBasicFunctionIndices[kineticComponentLabel][i, j + 1]].evaluate(internalCoordinates[j])
+                    newTerm *= basicFunctions[j + 1][self.kineticBasicFunctionIndices[kineticComponentLabel][i, j + self.massesIncluded]].evaluate(internalCoordinates[j])
+                kineticComponent[self.kineticComponentIndices[kineticComponentLabel][i, 0]-1, self.kineticComponentIndices[kineticComponentLabel][i, 1]-1] += newTerm 
         return kineticComponent*wavenumberConversion
             

@@ -1,9 +1,10 @@
+#### Legacy Example
 import numpy as np
 
 toRadians = np.pi/180
 wavenumberConversion = 33.7152537836138732499014581824370 # conversion factor to cm-1
 # Case of H2CS
-masses = np.array([12.00000000, 31.9720707, 1.00782503223])
+masses = np.array([12.00000000, 31.9720707, 1.00782503223, 1.00782503223])
 qVector = np.array([1.608952, 1.086848, 1.086848, 121.750*toRadians, 121.750*toRadians, np.pi])
 numberOfModes = len(qVector)
 
@@ -20,7 +21,7 @@ basicFunctionsInputLines = basicFunctionsInput.split("\nEND")[0].split("\n")
 basicFunctionsInputLines = basicFunctionsInputLines[1:]
 
 elementaryFunctionMap = {
-    "I": lambda x : x,
+    "R": lambda x : x,
     "COS": np.cos,
     "SIN": np.sin,
     "TAN": np.tan,
@@ -35,21 +36,18 @@ def basicFunctionTemplate(basicFunctionLine: str):
     function f_p_k.'''
     basicFunctionLineSplit = basicFunctionLine.split()
     if basicFunctionLineSplit[1] == "2":
-        n1 = float(basicFunctionLineSplit[2])
-        f1 = elementaryFunctionMap[basicFunctionLineSplit[3].upper()]
+        f1 = elementaryFunctionMap[basicFunctionLineSplit[2].upper()]
+        n1 = float(basicFunctionLineSplit[3])
         a1 = float(basicFunctionLineSplit[4])
-        k1 = float(basicFunctionLineSplit[5])
+        f2 = elementaryFunctionMap[basicFunctionLineSplit[5].upper()]
         n2 = float(basicFunctionLineSplit[6])
-        f2 = elementaryFunctionMap[basicFunctionLineSplit[7].upper()]
-        a2 = float(basicFunctionLineSplit[8])
-        k2 = float(basicFunctionLineSplit[9])
-        return lambda q : f1(a1*q**k1)**n1*f2(a2*q**k2)**n2
+        a2 = float(basicFunctionLineSplit[7])
+        return lambda q : f1(a1*q)**n1*f2(a2*q)**n2
     else:
-        n1 = float(basicFunctionLineSplit[2])
-        f1 = elementaryFunctionMap[basicFunctionLineSplit[3].upper()]
+        f1 = elementaryFunctionMap[basicFunctionLineSplit[2].upper()]
+        n1 = float(basicFunctionLineSplit[3])
         a1 = float(basicFunctionLineSplit[4])
-        k1 = float(basicFunctionLineSplit[5])
-        return lambda q : f1(a1*q**k1)**n1
+        return lambda q : f1(a1*q)**n1
     
 basicFunctionsList = {}
 basicFunctionsList[0] = 1/masses # Reciprocal masses act as mode 0
