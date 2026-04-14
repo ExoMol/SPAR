@@ -61,6 +61,21 @@ class basicFunction:
                     primitiveFunctionList += [lambda q, p=p, b=b: np.tan(b*q)**(-p)]
                     readIndex += 3
                 # Series type primitive functions
+                case "morse":
+                    b = float(basicFunctionLineSplit[readIndex + 4])
+                    c = float(basicFunctionLineSplit[readIndex + 5])
+                    primitiveFunctionList += [lambda q, p=order, b=b, c=c: (1-np.exp(-c*(q-b)))**p]
+                    readIndex += 6
+                case "power":
+                    b = float(basicFunctionLineSplit[readIndex + 4])
+                    c = float(basicFunctionLineSplit[readIndex + 5])
+                    primitiveFunctionList += [lambda q, p=order, b=b: (q - b)**p]
+                    readIndex += 6
+                case "cos(q0)-cos(q)":
+                    b = float(basicFunctionLineSplit[readIndex + 4])
+                    c = float(basicFunctionLineSplit[readIndex + 5])
+                    primitiveFunctionList += [lambda q, p=order, b=b: (np.cos(b) - np.cos(q))**p]
+                    readIndex += 6
         self.primitiveFunctionList = primitiveFunctionList
     
     def evaluate(self, q: float) -> float:
@@ -78,35 +93,20 @@ def readBasicFunctions(basicFunctionInputFile: str) -> dict:
     basicFunctionMainHeader: str = basicFunctionInputLines[0].lower()
     basicFunctionInputLines = basicFunctionInputLines[1:]
     modeHeaderIndex: int = 0
-    if "poten" in basicFunctionMainHeader:
-        print("die katze ist traurig")
-        # for i in range(numberOfModes):
-        #     modeFunctionList = {} # New list of functions for mode
-        #     # modeFunctionList[0] = basicFunction("0 1 0 I 1 1") # Function 0 is always 1!
-        #     numberOfLinesForMode: int = int(basicFunctionInputLines[modeHeaderIndex].split()[-1])
-        #     lineBeingRead: int = 1
-        #     functionIndexCounter: int = 0
-        #     while lineBeingRead <= numberOfLinesForMode:
-        #         basicFunctionInputLine: str = basicFunctionInputLines[modeHeaderIndex + lineBeingRead]
-        #         basicFunctionInputLineSplit: list = basicFunctionInputLine.split()
-        #         functionIndex: int = int(basicFunctionInputLineSplit[0])
-        #         if int(basicFunctionInputLineSplit[0]) < 0:
-        #             modeFunctionList[functionIndex] = basicFunction(basicFunctionInputLine)
-        #         else:
-        #             functionLabel: str = basicFunctionInputLineSplit[3].lower()
-        #             seriesType: str = "taylor"
-        #             orderIndex: int = 2
-        #             if seriesType == "taylor":
-        #                 orderIndex = 2
-        #             else:
-        #                 orderIndex = 4
-        #             maxOrder: int = int(basicFunctionInputLineSplit[orderIndex])
-        #             for j in range(maxOrder+1):
-        #                 modeFunctionList[functionIndexCounter] = basicFunction(basicFunctionInputLine, True, j)
-        #                 functionIndexCounter += 1
-        #         lineBeingRead += 1
-        #     basicFunctionsList[i + 1] = modeFunctionList
-        #     modeHeaderIndex += lineBeingRead
+    if "poten" in basicFunctionMainHeader or "external" in basicFunctionMainHeader:
+        for i in range(numberOfModes):
+            modeFunctionList = {} # New list of functions for mode
+            modeFunctionList[0] = basicFunction("0 1 r 0 1") # Function 0 is always 1!
+            lineNumber = 1
+            functionIndex = 1
+            while "mode" not in basicFunctionInputLines[modeHeaderIndex + lineNumber].lower():
+                orderLower = int(basicFunctionInputLines[modeHeaderIndex + lineNumber].split()[2])
+                orderUpper = int(basicFunctionInputLines[modeHeaderIndex + lineNumber].split()[4])
+                for j in range(orderLower, orderUpper + 1):
+                    modeFunctionList[functionIndex] = basicFunction(basicFunctionInputLines[modeHeaderIndex + lineNumber], True, j)
+                    functionIndex += 1
+                lineNumber += 1
+            basicFunctionsList[i + 1] = modeFunctionList
     else:
         for i in range(numberOfModes):
             modeFunctionList = {} # New list of functions for mode

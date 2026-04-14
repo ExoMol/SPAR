@@ -1,0 +1,9 @@
+BASIC-FUNCTION external
+Mode 1 6
+1 Power          1 : 6 1.6000 0.000
+Mode 2 6
+1 Power          1 : 6 0.9478 0.000
+Mode 3 13
+1 cos(q0)-cos(q) 1 : 6 0.0000 0.000
+2 cos(q0)-cos(q) 0 : 6 0.0000 0.000 Sin 1 1
+END
