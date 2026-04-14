@@ -71,10 +71,25 @@ class basicFunction:
                     c = float(basicFunctionLineSplit[readIndex + 5])
                     primitiveFunctionList += [lambda q, p=order, b=b: (q - b)**p]
                     readIndex += 6
+                case "cos(q)-cos(q0)":
+                    b = float(basicFunctionLineSplit[readIndex + 4])
+                    c = float(basicFunctionLineSplit[readIndex + 5])
+                    primitiveFunctionList += [lambda q, p=order, b=b: (np.cos(q) - np.cos(b))**p]
+                    readIndex += 6
+                case "sin(q)-sin(q0)":
+                    b = float(basicFunctionLineSplit[readIndex + 4])
+                    c = float(basicFunctionLineSplit[readIndex + 5])
+                    primitiveFunctionList += [lambda q, p=order, b=b: (np.sin(q) - np.sin(b))**p]
+                    readIndex += 6
                 case "cos(q0)-cos(q)":
                     b = float(basicFunctionLineSplit[readIndex + 4])
                     c = float(basicFunctionLineSplit[readIndex + 5])
                     primitiveFunctionList += [lambda q, p=order, b=b: (np.cos(b) - np.cos(q))**p]
+                    readIndex += 6
+                case "sin(q0)-sin(q)":
+                    b = float(basicFunctionLineSplit[readIndex + 4])
+                    c = float(basicFunctionLineSplit[readIndex + 5])
+                    primitiveFunctionList += [lambda q, p=order, b=b: (np.sin(b) - np.sin(q))**p]
                     readIndex += 6
         self.primitiveFunctionList = primitiveFunctionList
     
@@ -218,3 +233,27 @@ class kineticMapping:
                 kineticComponent[self.kineticComponentIndices[kineticComponentLabel][i, 0]-1, self.kineticComponentIndices[kineticComponentLabel][i, 1]-1] += newTerm 
         return kineticComponent*wavenumberConversion
             
+class potentialMapping:
+    potentialCoefficients: np.ndarray
+    potentialBasicFunctionIndices: np.ndarray
+    massesIncluded: bool
+    numberOfModes: int
+    numberOfTerms: int
+
+    def __init__(self, potentialCheckpointFile: str, massesIncluded: bool = False):
+        with open(potentialCheckpointFile) as f:
+            potentialCheckpointContent: str = f.read().lower()
+        potentialInput = potentialCheckpointContent.split("\nEnd of potential")[0].split("\n")[1:][:-3]
+        
+        self.massesIncluded = massesIncluded
+        self.numberOfModes = len(potentialInput[0].split()) - self.massesIncluded - 3
+        self.numberOfTerms = len(potentialInput)
+
+        self.potentialCoefficients = np.zeros(self.numberOfTerms)
+        self.potentialBasicFunctionIndices = np.zeros((self.numberOfTerms, self.numberOfModes), dtype=int)
+
+        for i in range(self.numberOfTerms):
+            potentialLineSplit = potentialInput[i].split()
+            self.potentialCoefficients[i] = float(potentialLineSplit[2])
+            for j in range(self.numberOfModes):
+                self.potentialBasicFunctionIndices[i, j] = int(potentialLineSplit[3 + j])
