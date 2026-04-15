@@ -1,0 +1,8 @@
+BASIC-FUNCTION POTEN
+Mode 1 3
+1 Morse          2 : 2 1.5 2.00
+Mode 2 3
+1 Morse          2 : 2 2.0 0.0
+Mode 3 3
+1 cos(q0)-cos(q) 2 : 2  0.0 0.0
+END    

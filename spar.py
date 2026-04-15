@@ -278,7 +278,7 @@ class potentialMapping:
         potentialInput = potentialCheckpointContent.split("\nEnd of potential")[0].split("\n")[1:][:-3]
         
         self.massesIncluded = massesIncluded
-        self.numberOfModes = len(potentialInput[0].split()) - self.massesIncluded - 3
+        self.numberOfModes = len(potentialInput[0].split()) - self.massesIncluded - 2
         self.numberOfTerms = len(potentialInput)
 
         self.potentialCoefficients = np.zeros(self.numberOfTerms)
@@ -286,9 +286,9 @@ class potentialMapping:
 
         for i in range(self.numberOfTerms):
             potentialLineSplit = potentialInput[i].split()
-            self.potentialCoefficients[i] = float(potentialLineSplit[2])
+            self.potentialCoefficients[i] = float(potentialLineSplit[1])
             for j in range(self.numberOfModes):
-                self.potentialBasicFunctionIndices[i, j] = int(potentialLineSplit[3 + j])
+                self.potentialBasicFunctionIndices[i, j] = int(potentialLineSplit[2 + j])
     
     def evaluate(self, basicFunctions: dict, internalCoordinates: np.ndarray):
         potential: float = 0.0
