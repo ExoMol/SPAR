@@ -91,6 +91,18 @@ class basicFunction:
                     c = float(basicFunctionLineSplit[readIndex + 5])
                     primitiveFunctionList += [lambda q, p=order, b=b: (np.sin(b) - np.sin(q))**p]
                     readIndex += 6
+                case "exp":
+                    p = float(basicFunctionLineSplit[readIndex + 1])
+                    b = float(basicFunctionLineSplit[readIndex + 2])
+                    c = float(basicFunctionLineSplit[readIndex + 3])
+                    primitiveFunctionList += [lambda q, p=p, b=b, c=c: np.exp(c*(q-b)**p)]
+                    readIndex += 4
+                case "expmin":
+                    p = float(basicFunctionLineSplit[readIndex + 1])
+                    b = float(basicFunctionLineSplit[readIndex + 2])
+                    c = float(basicFunctionLineSplit[readIndex + 3])
+                    primitiveFunctionList += [lambda q, p=p, b=b, c=c: np.exp(c*min(-abs(np.pi - q) - (b - np.pi), 0)**p)]
+                    readIndex += 4
         self.primitiveFunctionList = primitiveFunctionList
     
     def evaluate(self, q: float) -> float:
@@ -98,12 +110,23 @@ class basicFunction:
         for i in range(self.numberOfFunctions):
             functionOutput *= self.primitiveFunctionList[i](q)
         return functionOutput
-        
+
+# Defines series type functions     
+seriesTypeFunctions = [
+    "morse",
+    "power",
+    "cos(q)-cos(q0)",
+    "sin(q)-sin(q0)",
+    "cos(q0)-cos(q)",
+    "sin(q0)-sin(q)"
+]
+
 def readBasicFunctions(basicFunctionInputFile: str) -> dict:
     with open(basicFunctionInputFile) as f:
         basicFunctionInput: str = f.read()
     basicFunctionsList: dict = {}
     numberOfModes: int = basicFunctionInput.lower().count("mode")
+    # print(basicFunctionInput)
     basicFunctionInputLines: list = basicFunctionInput.split("\nEND")[0].split("\n")
     basicFunctionMainHeader: str = basicFunctionInputLines[0].lower()
     basicFunctionInputLines = basicFunctionInputLines[1:]
@@ -114,14 +137,23 @@ def readBasicFunctions(basicFunctionInputFile: str) -> dict:
             modeFunctionList[0] = basicFunction("0 1 r 0 1") # Function 0 is always 1!
             lineNumber = 1
             functionIndex = 1
-            while "mode" not in basicFunctionInputLines[modeHeaderIndex + lineNumber].lower():
-                orderLower = int(basicFunctionInputLines[modeHeaderIndex + lineNumber].split()[2])
-                orderUpper = int(basicFunctionInputLines[modeHeaderIndex + lineNumber].split()[4])
-                for j in range(orderLower, orderUpper + 1):
-                    modeFunctionList[functionIndex] = basicFunction(basicFunctionInputLines[modeHeaderIndex + lineNumber], True, j)
-                    functionIndex += 1
-                lineNumber += 1
+            try:
+                while "mode" not in basicFunctionInputLines[modeHeaderIndex + lineNumber].lower():
+                    if basicFunctionInputLines[modeHeaderIndex + lineNumber].split()[1].lower() in seriesTypeFunctions:
+                        orderLower = int(basicFunctionInputLines[modeHeaderIndex + lineNumber].split()[2])
+                        orderUpper = int(basicFunctionInputLines[modeHeaderIndex + lineNumber].split()[4])
+                        for j in range(orderLower, orderUpper + 1):
+                            modeFunctionList[functionIndex] = basicFunction(basicFunctionInputLines[modeHeaderIndex + lineNumber], True, j)
+                            functionIndex += 1
+                        lineNumber += 1
+                    else:
+                        modeFunctionList[functionIndex] = basicFunction(basicFunctionInputLines[modeHeaderIndex + lineNumber], True)
+                        functionIndex += 1
+                        lineNumber += 1
+            except:
+                pass
             basicFunctionsList[i + 1] = modeFunctionList
+            modeHeaderIndex += lineNumber
     else:
         for i in range(numberOfModes):
             modeFunctionList = {} # New list of functions for mode
@@ -257,3 +289,13 @@ class potentialMapping:
             self.potentialCoefficients[i] = float(potentialLineSplit[2])
             for j in range(self.numberOfModes):
                 self.potentialBasicFunctionIndices[i, j] = int(potentialLineSplit[3 + j])
+    
+    def evaluate(self, basicFunctions: dict, internalCoordinates: np.ndarray):
+        potential: float = 0.0
+        for i in range(self.numberOfTerms):
+            newTerm = self.potentialCoefficients[i]
+            for j in range(self.numberOfModes):
+                newTerm *= basicFunctions[j + 1][self.potentialBasicFunctionIndices[i, j] + self.massesIncluded].evaluate(internalCoordinates[j])
+            potential += newTerm
+        return potential
+            
