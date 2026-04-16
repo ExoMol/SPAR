@@ -298,4 +298,41 @@ class potentialMapping:
                 newTerm *= basicFunctions[j + 1][self.potentialBasicFunctionIndices[i, j] + self.massesIncluded].evaluate(internalCoordinates[j])
             potential += newTerm
         return potential
+
+class externalMapping:
+    externalCoefficients: np.ndarray
+    externalComponentIndices: np.ndarray
+    externalBasicFunctionIndices: np.ndarray
+    massesIncluded: bool
+    numberOfModes: int
+    numberOfTerms: int
+
+    def __init__(self, externalCheckpointFile: str, massesIncluded: bool = False):
+        with open(externalCheckpointFile) as f:
+            externalCheckpointContent: str = f.read().lower()
+        externalInput = externalCheckpointContent.split("\nEnd of external")[0].split("\n")[1:][:-3]
+        
+        self.massesIncluded = massesIncluded
+        self.numberOfModes = len(externalInput[0].split()) - self.massesIncluded - 3
+        self.numberOfTerms = len(externalInput)
+
+        self.externalCoefficients = np.zeros(self.numberOfTerms)
+        self.externalComponentIndices = np.zeros(self.numberOfTerms, dtype=int)
+        self.externalBasicFunctionIndices = np.zeros((self.numberOfTerms, self.numberOfModes), dtype=int)
+
+        for i in range(self.numberOfTerms):
+            externalLineSplit = externalInput[i].split()
+            self.externalComponentIndices[i] = int(externalLineSplit[0])
+            self.externalCoefficients[i] = float(externalLineSplit[2])
+            for j in range(self.numberOfModes):
+                self.externalBasicFunctionIndices[i, j] = int(externalLineSplit[3 + j])
+    
+    def evaluate(self, basicFunctions: dict, internalCoordinates: np.ndarray):
+        external = np.zeros(max(self.externalComponentIndices))
+        for i in range(self.numberOfTerms):
+            newTerm = self.externalCoefficients[i]
+            for j in range(self.numberOfModes):
+                newTerm *= basicFunctions[j + 1][self.externalBasicFunctionIndices[i, j] + self.massesIncluded].evaluate(internalCoordinates[j])
+            external[self.externalComponentIndices[i] - 1] += newTerm
+        return external
             
