@@ -14,6 +14,6 @@ For KEOs we also include a mass-dependent form:
 $`h(\bm{q}) = 
 \sum_{{l}_0,{l}_1,l_2,\ldots,} a_{{l}_0,{l}_1,l_2 \ldots,}
 \frac{1}{m_{{l}_0}} f_{{l}_1}(q_1) f_{{l}_1}(q_1)   \cdots \equiv  
-\sum_{\bm{l}} a_{\bm{l}}\prod^{D}_{k = 0} f^{(k)}_{{l}_k}(q_k),`$
+\sum_{\mathbf{l}} a_{\mathbf{l}}\prod^{D}_{k = 0} f^{(k)}_{{l}_k}(q_k),`$
 
 where $`\mathbf{l}`$ is now defined such that index $`k=0`$ refers to a nuclear mass such that $`\mathbf{l} = (l_0, l_1, l_2,...l_{3\mathcal{N}-6})`$.
