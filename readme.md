@@ -11,7 +11,7 @@ Where $`h(\mathbf{q})`$ is an operator, or component of an operator, that depend
 
 For KEOs we also include a mass-dependent form: 
 
-$`h(\bm{q}) = 
+$`h(\mathbf{q}) = 
 \sum_{{l}_0,{l}_1,l_2,\ldots,} a_{{l}_0,{l}_1,l_2 \ldots,}
 \frac{1}{m_{{l}_0}} f_{{l}_1}(q_1) f_{{l}_1}(q_1)   \cdots \equiv  
 \sum_{\mathbf{l}} a_{\mathbf{l}}\prod^{D}_{k = 0} f^{(k)}_{{l}_k}(q_k),`$
